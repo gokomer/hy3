@@ -7,7 +7,6 @@
 #include <hyprland/src/desktop/state/FocusState.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/defines.hpp>
-#include <hyprland/src/desktop/view/window/WindowPresentation.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
 #include <hyprland/src/config/shared/workspace/WorkspaceRuleManager.hpp>
 #include <hyprutils/math/Box.hpp>
@@ -242,10 +241,7 @@ void Hy3Node::focus(bool warp, Desktop::eFocusReason reason) {
 		auto window = this->as_window();
 		window->setHidden(false);
 		Desktop::focusState()->fullWindowFocus(window, reason);
-		if (warp) {
-			const auto box = window->layoutBox();
-			Hy3Layout::warpCursorToBox(box.pos(), box.size());
-		}
+		if (warp) Hy3Layout::warpCursorToBox(window->m_reportedPosition, window->m_reportedSize);
 		break;
 	}
 	case Hy3NodeType::Group: {
@@ -535,7 +531,7 @@ void Hy3Node::updateTabBarRecursive() {
 void Hy3Node::updateDecos() {
 	switch (this->type()) {
 	case Hy3NodeType::Target:
-		this->as_window()->presentation().refreshValues();
+		this->as_window()->updateDecorationValues();
 		break;
 	case Hy3NodeType::Group:
 		for (auto& child: this->as_group().children) {
@@ -548,7 +544,7 @@ void Hy3Node::updateDecos() {
 
 std::string Hy3Node::getTitle() {
 	switch (this->type()) {
-	case Hy3NodeType::Target: return this->as_window()->metadata().title();
+	case Hy3NodeType::Target: return this->as_window()->m_title;
 	case Hy3NodeType::Group:
 		std::string title;
 		auto& group = this->as_group();
@@ -574,7 +570,7 @@ std::string Hy3Node::getTitle() {
 
 bool Hy3Node::isUrgent() {
 	for (auto& window: this->windows()) {
-		if (window.m_hints & Desktop::View::WINDOW_HINT_URGENT) return true;
+		if (window.m_isUrgent) return true;
 	}
 	return false;
 }
@@ -957,3 +953,4 @@ void Hy3Node::resize(ShiftDirection direction, double delta, bool no_animation) 
 		}
 	}
 }
+
