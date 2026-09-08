@@ -1,3 +1,5 @@
+#define HY3_NO_VERSION_CHECK 1
+
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/config/values/ConfigValues.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
