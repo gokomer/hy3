@@ -58,6 +58,6 @@ description = "i3 like tiling for hyprland"
 authors = ["outfoxxed"]
 output = "build/libhy3.so"
 build = [
-	"cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -B build",
+	"cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DHY3_NO_VERSION_CHECK=ON -B build",
 	"cmake --build build"
 ]

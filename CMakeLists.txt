@@ -32,7 +32,7 @@ file(READ ${CMAKE_CURRENT_BINARY_DIR}/src/tab.frag SHADER_TAB_FRAG)
 configure_file(src/shader_content.hpp.in src/shader_content.hpp @ONLY)
 target_include_directories(hy3 PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/src)
 
-option(HY3_NO_VERSION_CHECK "Disable hyprland version check" FALSE)
+option(HY3_NO_VERSION_CHECK "Disable hyprland version check" TRUE)
 
 if (HY3_NO_VERSION_CHECK)
 	target_compile_definitions(hy3 PRIVATE -DHY3_NO_VERSION_CHECK=TRUE)
