@@ -433,11 +433,21 @@ static SDispatchResult dispatch_warpcursor(std::string value) {
 	return warpCursor();
 }
 
-static SDispatchResult moveWindow(ShiftDirection shift, bool once, bool visible) {
+static SDispatchResult moveWindow(
+    ShiftDirection shift,
+    bool once,
+    bool visible,
+    std::optional<bool> cross_monitor
+) {
 	auto* hy3 = hy3InstanceForAction();
 	if (!hy3) return SDispatchResult {};
 
-	hy3->shiftWindow(hy3->workspace().get(), shift, once, visible);
+	static const auto s_cross_monitor =
+	    CConfigValue<Config::INTEGER>("plugin:hy3:move_window_cross_monitor");
+
+	bool allow_cross = cross_monitor.value_or(*s_cross_monitor != 0);
+
+	hy3->shiftWindow(hy3->workspace().get(), shift, once, visible, allow_cross);
 	return SDispatchResult {};
 }
 
@@ -448,24 +458,27 @@ static int luaMoveWindow(lua_State* L) {
 	auto shift = luaShiftArg(L, 1, FN);
 	bool once = false;
 	bool visible = false;
+	std::optional<bool> cross_monitor;
 
 	if (luaHasOptionsTable(L, 2, FN)) {
 		once = LuaInternal::tableOptBool(L, 2, "once").value_or(false);
 		visible = LuaInternal::tableOptBool(L, 2, "visible").value_or(false);
+		cross_monitor = LuaInternal::tableOptBool(L, 2, "cross_monitor");
 	}
 
 	auto dspMoveWindow = [](lua_State* L) -> int {
 		auto shift = static_cast<ShiftDirection>(lua_tointeger(L, lua_upvalueindex(1)));
 		bool once = lua_toboolean(L, lua_upvalueindex(2));
 		bool visible = lua_toboolean(L, lua_upvalueindex(3));
-		moveWindow(shift, once, visible);
+		moveWindow(shift, once, visible, luaOptionalBoolFromUpvalue(L, 4));
 		return 0;
 	};
 
 	lua_pushinteger(L, static_cast<lua_Integer>(shift));
 	lua_pushboolean(L, once);
 	lua_pushboolean(L, visible);
-	lua_pushcclosure(L, dspMoveWindow, 3);
+	lua_pushinteger(L, luaOptionalBoolMode(cross_monitor));
+	lua_pushcclosure(L, dspMoveWindow, 4);
 	return 1;
 }
 
@@ -474,21 +487,18 @@ static SDispatchResult dispatch_movewindow(std::string value) {
 	auto shift = parseShiftArg(args[0]);
 	if (!shift) return SDispatchResult {};
 
-	int i = 1;
 	bool once = false;
 	bool visible = false;
+	std::optional<bool> cross_monitor;
 
-	if (args[i] == "once") {
-		once = true;
-		i++;
+	for (size_t i = 1; i < args.size(); ++i) {
+		if (args[i] == "once") once = true;
+		else if (args[i] == "visible") visible = true;
+		else if (args[i] == "cross_monitor") cross_monitor = true;
+		else if (args[i] == "no_cross_monitor") cross_monitor = false;
 	}
 
-	if (args[i] == "visible") {
-		visible = true;
-		i++;
-	}
-
-	return moveWindow(*shift, once, visible);
+	return moveWindow(*shift, once, visible, cross_monitor);
 }
 
 static SDispatchResult moveToWorkspace(std::string workspace, bool follow, std::optional<bool> warp_override) {
