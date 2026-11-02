@@ -118,6 +118,7 @@ public:
 
 	// Hy3-specific public methods
 	void insertNode(UP<Hy3Node> node, std::optional<Vector2D> focalPoint = std::nullopt);
+	void insertNodeAtEdge(UP<Hy3Node> node, ShiftDirection from_direction);
 	void onWindowFocusChange(PHLWINDOW window);
 	void updateGroupBorderColors();
 
@@ -140,8 +141,8 @@ public:
 	void toggleTabGroupOn(Hy3Node&);
 	void changeGroupToOppositeOn(Hy3Node&);
 	void changeGroupEphemeralityOn(Hy3Node&, bool ephemeral);
-	void shiftNode(Hy3Node&, ShiftDirection, bool once, bool visible);
-	void shiftWindow(const Workspace::CHLWorkspace* workspace, ShiftDirection, bool once, bool visible);
+	void shiftNode(Hy3Node&, ShiftDirection, bool once, bool visible, bool cross_monitor = true);
+	void shiftWindow(const Workspace::CHLWorkspace* workspace, ShiftDirection, bool once, bool visible, bool cross_monitor = true);
 	void shiftFocus(const Workspace::CHLWorkspace* workspace, ShiftDirection, bool visible, bool warp);
 	void toggleFocusLayer(const Workspace::CHLWorkspace* workspace, bool warp);
 	bool shiftMonitor(Hy3Node&, ShiftDirection, bool follow);
@@ -189,7 +190,14 @@ private:
 	// if shift is true, shift the window in the given direction, returning
 	// nullptr, if shift is false, return the window in the given direction or
 	// nullptr. if once is true, only one group will be broken out of / into
-	Hy3Node* shiftOrGetFocus(Hy3Node&, ShiftDirection, bool shift, bool once, bool visible);
+	Hy3Node* shiftOrGetFocus(
+	    Hy3Node&,
+	    ShiftDirection,
+	    bool shift,
+	    bool once,
+	    bool visible,
+	    bool cross_monitor = true
+	);
 
 	void updateAutotileWorkspaces();
 	bool shouldAutotileWorkspace(const Workspace::CHLWorkspace* workspace);
